@@ -1,0 +1,156 @@
+import numpy as np
+import os
+import scipy.io as scio
+from sklearn.model_selection import train_test_split
+import pycaltransfer.caltransfer as caltransfer
+from sklearn.cross_decomposition import PLSRegression
+from sklearn import preprocessing
+from sklearn.metrics import mean_squared_error, r2_score
+import pandas as pd
+import numpy as np
+from matplotlib.pyplot import MultipleLocator
+from sklearn.decomposition import PCA
+import pandas as pd
+import os
+import scipy.io as scio
+import matplotlib.pyplot as plt
+import numpy as np
+import math
+import random
+import warnings
+import matplotlib.pyplot as plt
+import lightgbm as lgb
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import RandomizedSearchCV
+
+
+warnings.filterwarnings("ignore")
+
+#
+# data = np.array(pd.read_excel(r"D:\数据集（2）.xlsx", header=None, sheet_name="Meat_train"))
+# data1 = np.array(pd.read_excel(r"D:\数据集（2）.xlsx", header=None, sheet_name="Meat_test"))
+
+# 比赛
+# data = np.array(pd.read_excel(r"D:\数据集（5）.xlsx", header=None, sheet_name="coal_train_1.1"))
+# data1 = np.array(pd.read_excel(r"D:\数据集（5）.xlsx", header=None, sheet_name="coal_test_1.1"))
+
+data = np.array(pd.read_excel(r"D:\增强实验数据.xlsx", header=None, sheet_name="Corn_m5"))
+data1 = np.array(pd.read_excel(r"D:\增强实验数据.xlsx", header=None, sheet_name="Corn_m5_else"))
+
+# # # 去噪后
+# # data = np.array(pd.read_excel(r"D:\数据集（5）.xlsx", header=None, sheet_name="train_SSA"))
+# # data1 = np.array(pd.read_excel(r"D:\数据集（5）.xlsx", header=None, sheet_name="test_SSA"))
+#
+#
+#
+# # data = np.array(pd.read_excel(r"D:\数据集（3）.xlsx", header=None, sheet_name="gas_AAE"))
+# # data1 = np.array(pd.read_excel(r"D:\数据集（3）.xlsx", header=None, sheet_name="Gas_else"))
+#
+# # data2 = np.array(pd.read_excel(r"D:\数据集（2）.xlsx", header=None, sheet_name="corn_2"))
+#
+# # index1 = [j for j in range(len(data))]
+# # random.shuffle(index1)
+# #
+# # Xs = data[index1]
+# # train_X = Xs[:, 0:-1]
+# # train_y = Xs[:, -1]
+#
+#
+# # Cal_ratio = 0.8
+# X_R, X_sou_R = train_test_split(data, test_size=Cal_ratio, shuffle=True)
+# #
+# # train_X = data[:, 0:-1]
+# # train_y = data[:, -1]
+# #
+# # test_X = data1[:, 0:-1]
+# # test_y = data1[:, -1]
+#
+# #
+# # train_X = data[:, 0:700]
+# # train_y = data[:, 700]
+# #
+# # test_X = data1[:, 0:700]
+# # test_y = data1[:, 700]
+#
+# # gas
+# # train_X = data[:, 0:401]
+# # train_y = data[:, 401]
+# #
+# # test_X = data1[:, 0:401]
+# # test_y = data1[:, 401]
+# #
+train_X = data[:, 0:-1]
+train_y = data[:, -1]
+
+
+# test_X = data1[:, :]
+
+test_X = data1[:, 0:-1]
+test_y = data1[:, -1]
+
+# scaler1 = preprocessing.StandardScaler().fit(train_X)
+# train_X = scaler1.transform(train_X)
+#
+# scaler2 = preprocessing.StandardScaler().fit(test_X)
+# test_X = scaler2.transform(test_X)
+
+
+# test_X = preprocessing.normalize(test_X)
+
+# scaler = preprocessing.normalize(train_X)
+#
+# train_X1 = scaler.transform(train_X)
+
+
+# data_H = np.concatenate((data, data2,), axis=0)
+#
+# index1 = [j for j in range(len(data_H))]
+# random.shuffle(index1)
+#
+# Xs = data_H[index1]
+# train_X = Xs[:, 0:-1]
+# train_y = Xs[:, -1]
+
+
+# index2 = [j for j in range(len(data1))]
+# random.shuffle(index2)
+#
+# Xt = data1[index2]
+# test_X = Xt[:, 0:-1]
+# test_y = Xt[:, -1]
+
+#
+
+pls1 = PLSRegression(scale=False)
+# 网格寻优
+param_grid = {'n_components': range(1, 6)}
+gsearch = GridSearchCV(pls1, param_grid)
+pls_model = gsearch.fit(train_X, train_y)
+pls_prediction = pls_model.predict(test_X)
+
+pls_model_r2 = r2_score(test_y, pls_prediction)
+pls_model_rmse = np.sqrt(mean_squared_error(test_y, pls_prediction))
+
+
+
+print('Partial Least Squares Regression n_components:', pls_model.best_estimator_.n_components)
+print('pls_R2效果:', round(pls_model_r2, 4))
+print('pls_RMSE效果:', round(pls_model_rmse, 4))
+
+
+save_dir1 = './gan_mat_NY'
+path = "gan_mat_WV"
+if not os.path.exists(path):  # 检查目录是否存在
+    os.makedirs(path)  # 如果不存在则创建目录
+scio.savemat('{}\\{}.mat'.format(save_dir1, 55.1), {'gan_mat_Calibrate_1': pls_prediction})
+
+
+
+# plt.figure(7)
+# # plt.title("Active ingredient weight")
+# plt.xlabel("Y - True")
+# plt.ylabel("Y - Projections")
+# plt.plot((10, 23), (10, 23), color='y', linestyle='--')
+# plt.scatter(test_y, pls_prediction, marker='o', c='none', edgecolors='g', label="Pls_R2:0.9254\nPls_RMSE:0.7057")
+# plt.legend()
+# plt.show(block=True)
